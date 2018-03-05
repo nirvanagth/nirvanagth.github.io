@@ -9,7 +9,7 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
-    <title>Connecting to AWS Elasticache using stunnel · nirvanagth&#39;s Studio</title>
+    <title>Using Google Drive as image host · nirvanagth&#39;s Studio</title>
     <style type="text/css">
     @font-face {
         font-family: 'Oswald-Regular';
@@ -265,7 +265,7 @@
                 <a href="/" >nirvanagth&#39;s Studio.</a>
             </div>
             <div class="post-title">
-                <a href="#" class="post-name">Connecting to AWS Elasticache using stunnel</a>
+                <a href="#" class="post-name">Using Google Drive as image host</a>
             </div>
     </div>
     
@@ -286,7 +286,7 @@
         <h1 class="intro-title">
             <!-- 主页  -->
             
-            Connecting to AWS Elasticache using stunnel
+            Using Google Drive as image host
             <!-- 404 -->
             
         </h1>
@@ -304,13 +304,7 @@
             
                 <div class= post-intro-tags >
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = AWS Elasticache>AWS Elasticache</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = stunnel>stunnel</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = redis>redis</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = tech>tech</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = Google Drive>Google Drive</a>
     
 </div>
             
@@ -345,70 +339,18 @@
         <div class="container container-unloaded">
             <main class="main post-page">
     <article class="article-entry">
-        <h1 id="Scenario"><a href="#Scenario" class="headerlink" title="Scenario"></a>Scenario</h1><ul>
-<li><p>AWS elasticache just recently add this new feature of enabling tls/ssl for its redis clusters. Since the company I work for has strict rules to enforce every service we put on AWS must have both In-Transit and At-Rest Encryption, we can’t have cache service on AWS for a long time.</p>
+        <p>I want to use google drive as my image host for my blog. Here is how:</p>
+<ul>
+<li><p>when we get the shareable link from google drive, it looks like this:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://drive.google.com/open?id=YOUR_FILE_ID</span><br></pre></td></tr></table></figure>
 </li>
-<li><p>Now since the road block is removed, we are considering to provide cache service for other teams since it’s heavily requested.  </p>
+<li><p>But we can’t use this url as source of image directly, we need to change this url a little bit.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://drive.google.com/uc?export=view&amp;id=YOUR_FILE_ID</span><br></pre></td></tr></table></figure>
 </li>
-<li><p>This blog is to record what I find about how to connect to a tls enabled elasticache with redis-cli commandline tool using stunnel. </p>
+<li><p>If want to make it downloadable</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">https://drive.google.com/uc?export=download&amp;id=YOUR_FILE_ID</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
-<h1 id="Steps"><a href="#Steps" class="headerlink" title="Steps"></a>Steps</h1><ol>
-<li><p>Install stunnel</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install stunnel</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Configure stunnel. You can set up as many connections as are needed.</p>
-<pre><code>// create redis-cli.conf file
-cat /etc/stunnel/redis-cli.conf
-
-// add the following text into redis-cli.conf
-fips=no
-
-setuid=root
-
-setgid=nogroup
-
-pid=/var/run/stunnel/stunnel.pid
-
-debug=7
-
-options=NO_SSLv2
-
-options=NO_SSLv3
-
-[redis-cli]
-
-client = yes
-
-accept = 127.0.0.1:6379
-
-connect = master.******.cache.amazonaws.com:6379
-
-[redis-cli-slave]
-
-client = yes
-
-accept = 127.0.0.1:6380
-
-connect = mycachenode-001.*******.cache.amazonaws.com
-</code></pre></li>
-<li><p>Start stunnel  </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo stunnel /etc/stunnel/redis-cli.conf</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Use redis-cli to connect to TLS enabled node using the local endpoint set in stunnel</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h localhost -p 6379</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Run any redis command you are insterested to test Elasticache<br>e.g.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">keys *</span><br><span class="line">// return all the keys.</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Test benchmark<br>e.g.  </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-benchmark -h localhost -p 6379 -n 10000 -q</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Stop and close the stunnel by killing the process.  </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo pkill stunnel</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>Hope you can find some useful info if you running into similar problem.</p>
 <p>03/04/2018</p>
 
     </article>
@@ -416,17 +358,12 @@ connect = mycachenode-001.*******.cache.amazonaws.com
     <ul class="post-paginator">
         <li class="next">
             
-                <div class="nextSlogan">Next Post</div>
-                <a href= "/2018/03/04/Monster-hunter-build-notes/" title= Monster hunter build notes >
-                    <div class="nextTitle">Monster hunter build notes</div>
-                </a>
-            
         </li>
         <li class="previous">
             
                 <div class="prevSlogan">Previous Post</div>
-                <a href= "/2018/03/01/hello-world/" title= Hello World >
-                    <div class="prevTitle">Hello World</div>
+                <a href= "/2018/03/04/Monster-hunter-build-notes/" title= Monster hunter build notes >
+                    <div class="prevTitle">Monster hunter build notes</div>
                 </a>
             
         </li>
@@ -521,7 +458,7 @@ connect = mycachenode-001.*******.cache.amazonaws.com
         <div class="toc-catalog">
             <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
         </div>
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Scenario"><span class="toc-number">1.</span> <span class="toc-text">Scenario</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Steps"><span class="toc-number">2.</span> <span class="toc-text">Steps</span></a></li></ol>
+        
     </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
